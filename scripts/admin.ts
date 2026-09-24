@@ -1,0 +1,10 @@
+import 'dotenv/config';
+import { openDatabase, one, run } from '../server/db';
+import { passwordHash } from '../server/security';
+import { randomUUID } from 'node:crypto';
+import { email, password } from '../server/validation';
+const db=openDatabase();
+const address=email.parse(process.env.ADMIN_EMAIL),secret=password.parse(process.env.ADMIN_PASSWORD);
+if(one(db,'SELECT 1 FROM users WHERE email=?',address)) throw new Error('Account already exists. Use an existing administrator to change its role.');
+run(db,"INSERT INTO users(id,email,name,password_hash,role) VALUES(?,?,?,?,'admin')",randomUUID(),address,'Administrator',await passwordHash(secret));
+db.close();console.log('Administrator created. Remove ADMIN_PASSWORD from your environment.');
